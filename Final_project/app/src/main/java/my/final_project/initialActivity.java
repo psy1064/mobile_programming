@@ -7,16 +7,17 @@ import android.view.View;
 import android.widget.Button;
 
 public class initialActivity extends AppCompatActivity {
-    Button bluetoothButton;
+    Button bluetoothbtn;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_inital);
-        bluetoothButton = (Button)findViewById(R.id.bluetoothButton);
-        bluetoothButton.setOnClickListener(new View.OnClickListener() {
+        setContentView(R.layout.activity_initial);
+        bluetoothbtn = (Button)findViewById(R.id.bluetoothButton);
+        bluetoothbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(initialActivity.this,MainActivity.class);
+                Intent intent = new Intent(initialActivity.this, MainActivity.class);
                 startActivity(intent);
             }
         });

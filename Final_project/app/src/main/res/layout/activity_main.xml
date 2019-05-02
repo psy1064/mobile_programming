@@ -15,8 +15,7 @@
         android:layout_marginLeft="0dp"
         android:layout_marginTop="0dp"
         android:scaleType="fitXY"
-        app:layout_anchorGravity="bottom|right|end"
-        app:srcCompat="@drawable/back_night" />
+        app:srcCompat="@drawable/back_sky" />
 
 
     <TextView
@@ -31,22 +30,20 @@
         android:layout_marginTop="53dp"
         android:background="@drawable/oval_shape"
         android:gravity="center"
-        android:text="매우나쁨"
+        android:text="----"
         android:textSize="20sp" />
 
     <TextView
         android:id="@+id/humText"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="187dp"
-        android:layout_marginLeft="187dp"
+        android:layout_marginRight="42dp"
         android:layout_marginTop="186dp"
         android:background="@drawable/oval_shape"
         android:gravity="center"
-        android:text="30%"
+        android:text="--%"
         android:textSize="20sp" />
 
     <TextView
@@ -61,7 +58,7 @@
         android:layout_marginTop="185dp"
         android:background="@drawable/oval_shape"
         android:gravity="center"
-        android:text="21℃"
+        android:text="--℃"
         android:textSize="20sp" />
 
 
@@ -82,10 +79,8 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_alignBottom="@+id/humText"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginStart="259dp"
-        android:layout_marginLeft="259dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="111dp"
         android:layout_marginBottom="7dp"
         app:srcCompat="@drawable/hum" />
 
@@ -118,8 +113,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/background"
-        android:layout_marginStart="42dp"
-        android:layout_marginLeft="42dp"
+        android:layout_marginStart="35dp"
+        android:layout_marginLeft="35dp"
         android:layout_marginTop="496dp"
         android:layout_toEndOf="@+id/lightBulbLogo"
         android:layout_toRightOf="@+id/lightBulbLogo"
@@ -166,8 +161,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/background"
-        android:layout_marginStart="41dp"
-        android:layout_marginLeft="41dp"
+        android:layout_marginStart="35dp"
+        android:layout_marginLeft="35dp"
         android:layout_marginTop="577dp"
         android:layout_toEndOf="@+id/alarmLogo"
         android:layout_toRightOf="@+id/alarmLogo"
@@ -185,7 +180,7 @@
         android:layout_toRightOf="@+id/alarmText" />
 
     <Button
-        android:id="@+id/setAlaramTimeButton"
+        android:id="@+id/setAlarmTimeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/background"
