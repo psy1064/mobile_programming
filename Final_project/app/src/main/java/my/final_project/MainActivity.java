@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onClick(View v) {
-                final TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, TimePickerDialog.THEME_DEVICE_DEFAULT_DARK,new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                         alarmHour = hourOfDay;
@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
                 timePickerDialog.show();
             }
         });
+
         turnOnButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
