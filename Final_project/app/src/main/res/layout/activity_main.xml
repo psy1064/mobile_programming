@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
     <ImageView
         android:id="@+id/background"
         android:layout_width="match_parent"
@@ -16,7 +17,6 @@
         android:layout_marginTop="0dp"
         android:scaleType="fitXY"
         app:srcCompat="@drawable/back_sky" />
-
 
     <TextView
         android:id="@+id/dustText"

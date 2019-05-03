@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -13,6 +14,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -35,8 +37,10 @@ public class MainActivity extends AppCompatActivity {
     CheckBox checkBox;
     NotificationManager notificationManager;
     Calendar calendar = Calendar.getInstance();
-    int alarmHour = 0;
-    int alarmMinute = 0;
+    static int alarmHour = 99;
+    static int alarmMinute = 99;
+    static boolean checkboxChecked = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,37 +51,58 @@ public class MainActivity extends AppCompatActivity {
         alarmButton = (Button)findViewById(R.id.setAlarmTimeButton);
         turnOnButton = (Button)findViewById(R.id.turnOnButton);
         turnOffButton = (Button)findViewById(R.id.turnOffButton);
-
+        if (checkboxChecked == true) {
+            checkBox.setChecked(true);
+            alarmButton.setVisibility(View.VISIBLE);
+            if(alarmHour > 0 && alarmHour < 12)
+                alarmButton.setText("오전 " + alarmHour + "시 " + alarmMinute + "분");
+            else if(alarmHour == 12)
+                alarmButton.setText("오후 " + alarmHour + "시 " + alarmMinute + "분");
+            else if(alarmHour > 12 && alarmHour <24)
+                alarmButton.setText("오후 " + (alarmHour-12) + "시 " + alarmMinute + "분");
+            else if(alarmHour == 0)
+                alarmButton.setText("오전 " + "0시 " + alarmMinute + "분");
+        }
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(checkBox.isChecked())
+                if(checkBox.isChecked()) {
                     alarmButton.setVisibility(View.VISIBLE);
+                    checkboxChecked = true;
+                }
                 else {
                     Toast.makeText(getApplicationContext(),"알람 설정이 초기화 되었습니다.", Toast.LENGTH_LONG).show();
                     alarmButton.setVisibility(View.INVISIBLE);
                     alarmButton.setText("알람시간설정");
-                    alarmHour = 0;
-                    alarmMinute = 0;
+                    checkboxChecked = false;
+                    alarmHour = 99;
+                    alarmMinute = 99;
+                    ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(0);
                 }
             }
         });
         alarmButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onClick(View v) {
-                showNotify();
                 final TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                         alarmHour = hourOfDay;
                         alarmMinute = minute;
-                        alarmButton.setText(alarmHour + " 시" + alarmMinute + " 분");
-                        Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시" + alarmMinute + "분 입니다.",Toast.LENGTH_LONG).show();
-
+                        if(alarmHour > 0 && alarmHour < 12)
+                            alarmButton.setText("오전 " + alarmHour + "시 " + alarmMinute + "분");
+                        else if(alarmHour == 12)
+                            alarmButton.setText("오후 " + alarmHour + "시 " + alarmMinute + "분");
+                        else if(alarmHour > 12 && alarmHour <24)
+                            alarmButton.setText("오후 " + (alarmHour-12) + "시 " + alarmMinute + "분");
+                        else if(alarmHour == 0)
+                            alarmButton.setText("오전 " + "0시 " + alarmMinute + "분");
+                        Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다.",Toast.LENGTH_LONG).show();
+                        showNotify();
                     }
                 },alarmHour,alarmMinute,true);
                 timePickerDialog.show();
-
             }
         });
         turnOnButton.setOnClickListener(new View.OnClickListener() {
@@ -107,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
                 alert.setTitle("알림");
-                alert.setMessage("전등을 끄시겠습니까?");
+                alert.setMessage("전등을 끄시겠습니까 ?");
                 alert.setPositiveButton("yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -117,20 +142,12 @@ public class MainActivity extends AppCompatActivity {
                 alert.setNegativeButton("no", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
                     }
                 });
                 AlertDialog alertDialog = alert.create();
                 alertDialog.show();
             }
         });
-        /*while(true)
-        {
-            if(alarmHour == calendar.get(Calendar.HOUR_OF_DAY))
-            {
-                Toast.makeText(getApplicationContext(),"Corret",Toast.LENGTH_LONG).show();
-            }
-        }*/
     }
     public void changedBackground() {
         int hour;
@@ -152,13 +169,29 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
     public void showNotify() {
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,0, new Intent(getApplicationContext(), MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder nbuilder = new NotificationCompat.Builder(this,"default");
         nbuilder.setSmallIcon(R.drawable.alarm);
         nbuilder.setContentTitle("알람");
-        nbuilder.setContentText("설정된 알람 시간은 " + alarmHour + " 시" + alarmMinute + " 분 입니다");
+        //nbuilder.setAutoCancel(true);
+        if(alarmHour > 0 && alarmHour < 12)
+            nbuilder.setContentText("설정된 알람 시간은 오전 " + alarmHour + "시 " + alarmMinute + "분");
+        else if(alarmHour == 12)
+            nbuilder.setContentText("설정된 알람 시간은 오후 " + alarmHour + "시 " + alarmMinute + "분");
+        else if(alarmHour > 12 && alarmHour <24)
+            nbuilder.setContentText("설정된 알람 시간은 오후 " + (alarmHour-12) + "시 " + alarmMinute + "분");
+        else if(alarmHour == 0)
+            nbuilder.setContentText("설정된 알람 시간은 오전 " + "0시 " + alarmMinute + "분");
+        nbuilder.setContentIntent(pendingIntent);
+        notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.createNotificationChannel(
+                    new NotificationChannel("default", "기본채널",NotificationManager.IMPORTANCE_DEFAULT));
+        }
 
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(1,nbuilder.build());
+        notificationManager.notify(0,nbuilder.build());
     }
 }
