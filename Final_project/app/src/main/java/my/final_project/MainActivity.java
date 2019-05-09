@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        alarmManager = (AlarmManager) getSystemService(context.ALARM_SERVICE);
+
         changedBackground(); // 시간에 따라 배경 사진 변경
         init(); // findViewById 초기화
 
@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         notificationManager.notify(0,nbuilder.build());
     }
-    // Notification 활성화d
+    // Notification 활성화
     public void setAlarmButtonText() {
         if(alarmCalendar.get(Calendar.HOUR_OF_DAY) > 0 && alarmCalendar.get(Calendar.HOUR_OF_DAY) < 12)
             alarmButton.setText("오전 " + alarmCalendar.get(Calendar.HOUR_OF_DAY) + "시 " + alarmCalendar.get(Calendar.MINUTE) + "분");
@@ -205,12 +205,23 @@ public class MainActivity extends AppCompatActivity {
     }
     // 알람 설정 버튼의 텍스트 설정
     public void setAlarm() {
+        int interval = 1000 * 60 * 60 * 24 ;
+        // 설정된 알람 시간이 현재 시간보다 작을 경우 다음날 알람으로 적용해줘야 하는데 필요한 변수
+        alarmManager = (AlarmManager) getSystemService(context.ALARM_SERVICE);
         Intent intent = new Intent(getApplicationContext(), AlarmActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),pendingIntent);
-        //intent.putExtra("Hour", alarmCalendar.get(Calendar.HOUR_OF_DAY));
-        //intent.putExtra("Minute", alarmCalendar.get(Calendar.MINUTE));
-        //startActivity(intent);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        if(alarmCalendar.get(Calendar.HOUR_OF_DAY) > calendar.get(Calendar.HOUR_OF_DAY)) {
+            alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),pendingIntent);
+        } // 세팅한 알람 시간이 현재 시간보다 클 경우
+        else if(alarmCalendar.get(Calendar.HOUR_OF_DAY) < calendar.get(Calendar.HOUR_OF_DAY)) {
+            alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,pendingIntent);
+        } // 세팅한 알람 시간이 현재 시간보다 작을 경우
+        else if(alarmCalendar.get(Calendar.HOUR_OF_DAY) == calendar.get(Calendar.HOUR_OF_DAY)) {
+            if(alarmCalendar.get(Calendar.MINUTE) > calendar.get(Calendar.MINUTE))
+                alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),pendingIntent);
+            else
+                alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,pendingIntent);
+        }
     }
     public void cancelAlarm() {
         alarmManager.cancel(alarmPendingIntent);

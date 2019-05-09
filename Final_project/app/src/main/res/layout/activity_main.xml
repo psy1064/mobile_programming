@@ -27,23 +27,24 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="107dp"
         android:layout_marginLeft="107dp"
-        android:layout_marginTop="53dp"
+        android:layout_marginTop="52dp"
         android:background="@drawable/oval_shape"
         android:gravity="center"
-        android:text="----"
+        android:text="매우나쁨\n(151㎍/m³)"
+        android:textColor="#F44336"
         android:textSize="20sp" />
 
     <TextView
         android:id="@+id/humText"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:layout_marginRight="42dp"
+        android:layout_alignParentRight="true"
         android:layout_marginTop="186dp"
+        android:layout_marginRight="42dp"
         android:background="@drawable/oval_shape"
         android:gravity="center"
-        android:text="--%"
+        android:text="30%"
         android:textSize="20sp" />
 
     <TextView
@@ -58,7 +59,7 @@
         android:layout_marginTop="185dp"
         android:background="@drawable/oval_shape"
         android:gravity="center"
-        android:text="--℃"
+        android:text="21℃"
         android:textSize="20sp" />
 
 
