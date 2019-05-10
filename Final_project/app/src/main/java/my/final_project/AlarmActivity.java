@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.Calendar;
@@ -19,18 +20,22 @@ public class AlarmActivity extends AppCompatActivity {
     MediaPlayer mediaPlayer;
     CheckBox checkBox;
     Button alarmButton;
+    ImageView alarmImage;
+    int alarmMode = 0;
     NotificationManager notificationManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alarm);
+        Intent intent = getIntent();
 
+        alarmMode = intent.getIntExtra("alarmMode",0);
         hourText = (TextView)findViewById(R.id.hourText);
         minuteText = (TextView)findViewById(R.id.minuteText);
         stopButton = (Button)findViewById(R.id.stopButton);
         alarmButton = (Button)findViewById(R.id.setAlarmTimeButton);
         checkBox = (CheckBox)findViewById(R.id.checkBox);
-
+        alarmImage = (ImageView)findViewById(R.id.alarmImage);
 
         if(calendar.get(Calendar.HOUR_OF_DAY) > 0 && calendar.get(Calendar.HOUR_OF_DAY) < 12) {
             hourText.setText("오전 " + calendar.get(Calendar.HOUR_OF_DAY)  +  "시 ");
@@ -49,18 +54,20 @@ public class AlarmActivity extends AppCompatActivity {
             minuteText.setText(calendar.get(Calendar.MINUTE) + "분");
         }
 
-        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.ringtone);
+        switch (alarmMode) {
+            case 0:
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.ringtone);
+                alarmImage.setImageResource(R.drawable.alarm);
+        }
+
         mediaPlayer.start();
 
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mediaPlayer.stop();
-                Intent intent = new Intent(AlarmActivity.this, MainActivity.class);
-                startActivity(intent);
+                finish();
             }
         });
-
-
     }
 }

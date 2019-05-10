@@ -44,6 +44,16 @@ public class MainActivity extends AppCompatActivity {
     static boolean checkboxChecked = false;
     static int alarmHour ;
     static int alarmMinute ;
+    int alarmMode = 0;
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        //finish();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
                     alarmButton.setText("알람시간설정");
                     checkboxChecked = false;
                     ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(0);
+                    cancelAlarm();
                 }
             }
         });
@@ -85,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
                         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
                         alarmCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         alarmCalendar.set(Calendar.MINUTE, minute);
+                        alarmCalendar.set(Calendar.SECOND,00);
                         alarmHour = hourOfDay;
                         alarmMinute = minute;
                         Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다.",Toast.LENGTH_LONG).show();
@@ -143,8 +155,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // 전등 Off 버튼
-    }
 
+    }
     public void init() {
         checkBox = (CheckBox)findViewById(R.id.checkBox);
         alarmButton = (Button)findViewById(R.id.setAlarmTimeButton);
@@ -211,25 +223,24 @@ public class MainActivity extends AppCompatActivity {
         int interval = 1000 * 60 * 60 * 24 ;
         // 설정된 알람 시간이 현재 시간보다 작을 경우 다음날 알람으로 적용해줘야 하는데 필요한 변수
         alarmManager = (AlarmManager) getSystemService(context.ALARM_SERVICE);
-        Intent intent = new Intent(getApplicationContext(), AlarmActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        Intent intent = new Intent(this, AlarmActivity.class);
+        alarmPendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         if(alarmHour > calendar.get(Calendar.HOUR_OF_DAY)) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),pendingIntent);
+            alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
+            intent.putExtra("alarmMode",alarmMode);
         } // 세팅한 알람 시간이 현재 시간보다 클 경우
         else if(alarmHour < calendar.get(Calendar.HOUR_OF_DAY)) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,pendingIntent);
+            alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
         } // 세팅한 알람 시간이 현재 시간보다 작을 경우
         else if(alarmHour == calendar.get(Calendar.HOUR_OF_DAY)) {
             if(alarmMinute > calendar.get(Calendar.MINUTE))
-                alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),pendingIntent);
+                alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
             else
-                alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,pendingIntent);
+                alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
         }
     }
     public void cancelAlarm() {
         alarmManager.cancel(alarmPendingIntent);
-        alarmIntent.putExtra("state","alarm off");
-        sendBroadcast(alarmIntent);
     }
 
 }
