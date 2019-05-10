@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -37,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     Calendar calendar = Calendar.getInstance();
     Calendar alarmCalendar = Calendar.getInstance();
 
+    FloatingActionButton fab;
+
     PendingIntent alarmPendingIntent;
     Intent alarmIntent;
 
@@ -44,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
     static boolean checkboxChecked = false;
     static int alarmHour ;
     static int alarmMinute ;
-    int alarmMode = 0;
+    static int setTimePickerValue = 0;
+    static int alarmMode = 0;
 
     @Override
     public void onBackPressed() {
@@ -62,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
         changedBackground(); // 시간에 따라 배경 사진 변경
         init(); // findViewById 초기화
+        //registerForContextMenu(fab);
 
         if (checkboxChecked == true) {
             checkBox.setChecked(true);
@@ -90,23 +95,53 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onClick(View v) {
-                TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, TimePickerDialog.THEME_DEVICE_DEFAULT_DARK,new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-                        alarmCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        alarmCalendar.set(Calendar.MINUTE, minute);
-                        alarmCalendar.set(Calendar.SECOND,00);
-                        alarmHour = hourOfDay;
-                        alarmMinute = minute;
-                        Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다.",Toast.LENGTH_LONG).show();
+                switch (setTimePickerValue) {
+                    case 0: {
+                        final TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this ,TimePickerDialog.THEME_DEVICE_DEFAULT_LIGHT,new TimePickerDialog.OnTimeSetListener() {
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                                alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+                                alarmCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                                alarmCalendar.set(Calendar.MINUTE, minute);
+                                alarmCalendar.set(Calendar.SECOND,00);
+                                alarmHour = hourOfDay;
+                                alarmMinute = minute;
+                                Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다.",Toast.LENGTH_LONG).show();
 
-                        setAlarmButtonText();
-                        showNotify();
-                        setAlarm();
+                                setAlarmButtonText();
+
+                                showNotify();
+                                setAlarm();
+                            }
+                        },alarmHour,alarmMinute,false);
+                        timePickerDialog.show();
+                        break;
                     }
-                },alarmHour,alarmMinute,true);
-                timePickerDialog.show();
+
+                    case 1: {
+                        final TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, android.R.style.Theme_Holo_Light_Dialog,new TimePickerDialog.OnTimeSetListener() {
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                                alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+                                alarmCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                                alarmCalendar.set(Calendar.MINUTE, minute);
+                                alarmCalendar.set(Calendar.SECOND,00);
+                                alarmHour = hourOfDay;
+                                alarmMinute = minute;
+                                Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다.",Toast.LENGTH_LONG).show();
+
+                                setAlarmButtonText();
+
+                                showNotify();
+                                setAlarm();
+                            }
+                        },alarmHour,alarmMinute,false);
+                        timePickerDialog.show();
+                        break;
+                    }
+
+                }
+
             }
         });
         // 알람 시간 설정 버튼
@@ -155,6 +190,46 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // 전등 Off 버튼
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String item [] = {"TimePickerMode 세팅", "AlarmMode 세팅"};
+                final String item2 [] = {"Circle Mode", "Spinner Mode"};
+                int[] selected = {0};
+                final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
+                alertBuilder.setTitle("설정");
+                alertBuilder.setItems(item, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0 :
+                                AlertDialog.Builder alertBuilder1 = new AlertDialog.Builder(MainActivity.this);
+                                alertBuilder1.setTitle("TimePickerMode 세팅");
+                                alertBuilder1.setItems(item2, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        switch (which) {
+                                            case 0 :
+                                                Toast.makeText(getApplicationContext(), "Circle Mode", Toast.LENGTH_LONG).show();
+                                                setTimePickerValue = 0;
+                                                break;
+                                            case 1:
+                                                Toast.makeText(getApplicationContext(), "Spinner Mode", Toast.LENGTH_LONG).show();
+                                                setTimePickerValue = 1;
+                                                break;
+                                        }
+                                    }
+                                });
+                                AlertDialog alertDialog1 = alertBuilder1.create();
+                                alertDialog1.show();
+                        }
+                    }
+                });
+                AlertDialog alertDialog = alertBuilder.create();
+                alertDialog.show();
+
+            }
+        });
 
     }
     public void init() {
@@ -162,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
         alarmButton = (Button)findViewById(R.id.setAlarmTimeButton);
         turnOnButton = (Button)findViewById(R.id.turnOnButton);
         turnOffButton = (Button)findViewById(R.id.turnOffButton);
+        fab = (FloatingActionButton)findViewById(R.id.fab);
     }
     // findViewById 초기화
     public void changedBackground() {
@@ -242,5 +318,4 @@ public class MainActivity extends AppCompatActivity {
     public void cancelAlarm() {
         alarmManager.cancel(alarmPendingIntent);
     }
-
 }

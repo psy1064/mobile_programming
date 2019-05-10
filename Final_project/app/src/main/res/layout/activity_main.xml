@@ -193,5 +193,20 @@
         android:visibility="invisible"
         android:text="알람시간설정" />
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="67dp"
+        android:layout_height="81dp"
+        android:layout_alignEnd="@+id/background"
+        android:layout_alignRight="@+id/background"
+        android:layout_alignBottom="@+id/background"
+        android:layout_marginEnd="14dp"
+        android:layout_marginRight="14dp"
+        android:layout_marginBottom="23dp"
+        android:clickable="true"
+        app:fabSize="normal"
+        app:srcCompat="@android:drawable/ic_menu_preferences"
+        app:theme="@style/AppTheme" />
+
 
 </RelativeLayout>
