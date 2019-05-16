@@ -55,9 +55,17 @@ public class AlarmActivity extends AppCompatActivity {
         }
 
         switch (alarmMode) {
-            case 0:
+            case 0: {
                 mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.ringtone);
                 alarmImage.setImageResource(R.drawable.alarm);
+                break;
+            }
+            case 1: {
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.ringtone);
+                alarmImage.setImageResource(R.drawable.applogo);
+                break;
+            }
+
         }
 
         mediaPlayer.start();

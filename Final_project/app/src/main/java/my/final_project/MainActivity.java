@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -41,22 +42,48 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton fab;
 
     PendingIntent alarmPendingIntent;
-    Intent alarmIntent;
 
     Context context;
+
+    // 블루투스 사용
+    private static int REQUEST_ENABLE_BT = 10;
+
+
     static boolean checkboxChecked = false;
     static int alarmHour ;
     static int alarmMinute ;
-    static int setTimePickerValue = 0;
+    static int timePickerMode = 0;
     static int alarmMode = 0;
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-        //finish();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("종료하시겠습니까?");
+        builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                ActivityCompat.finishAffinity(MainActivity.this);
+                System.runFinalizersOnExit(true);
+                System.exit(0);
+            }
+        });
+        builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_HOME);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        });
+        builder.setNeutralButton("cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 
     @Override
@@ -95,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onClick(View v) {
-                switch (setTimePickerValue) {
+                switch (timePickerMode) {
                     case 0: {
                         final TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this ,TimePickerDialog.THEME_DEVICE_DEFAULT_LIGHT,new TimePickerDialog.OnTimeSetListener() {
                             @Override
@@ -194,7 +221,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String item [] = {"TimePickerMode 세팅", "AlarmMode 세팅"};
-                final String item2 [] = {"Circle Mode", "Spinner Mode"};
+                final String item1 [] = {"Circle Mode", "Spinner Mode"};
+                final String item2 [] = {"기본"};
                 int[] selected = {0};
                 final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
                 alertBuilder.setTitle("설정");
@@ -202,26 +230,49 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which) {
-                            case 0 :
+                            case 0 : {
                                 AlertDialog.Builder alertBuilder1 = new AlertDialog.Builder(MainActivity.this);
                                 alertBuilder1.setTitle("TimePickerMode 세팅");
-                                alertBuilder1.setItems(item2, new DialogInterface.OnClickListener() {
+                                alertBuilder1.setItems(item1, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         switch (which) {
-                                            case 0 :
+                                            case 0: {
                                                 Toast.makeText(getApplicationContext(), "Circle Mode", Toast.LENGTH_LONG).show();
-                                                setTimePickerValue = 0;
+                                                timePickerMode = 0;
                                                 break;
-                                            case 1:
+                                            }
+                                            case 1: {
                                                 Toast.makeText(getApplicationContext(), "Spinner Mode", Toast.LENGTH_LONG).show();
-                                                setTimePickerValue = 1;
+                                                timePickerMode = 1;
                                                 break;
+                                            }
                                         }
                                     }
                                 });
                                 AlertDialog alertDialog1 = alertBuilder1.create();
                                 alertDialog1.show();
+                                break;
+                            }
+                            case 1 : {
+                                AlertDialog.Builder alertBuilder1 = new AlertDialog.Builder(MainActivity.this);
+                                alertBuilder1.setTitle("AlarmMode 세팅");
+                                alertBuilder1.setItems(item2, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        switch (which) {
+                                            case 0: {
+                                                Toast.makeText(getApplicationContext(), "기본 Mode", Toast.LENGTH_LONG).show();
+                                                alarmMode = 0;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                });
+                                AlertDialog alertDialog1 = alertBuilder1.create();
+                                alertDialog1.show();
+                                break;
+                            }
                         }
                     }
                 });
@@ -303,17 +354,28 @@ public class MainActivity extends AppCompatActivity {
         alarmPendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         if(alarmHour > calendar.get(Calendar.HOUR_OF_DAY)) {
             alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
-            intent.putExtra("alarmMode",alarmMode);
+            intent.putExtra("alarmMode",1);
+            startActivity(intent);
         } // 세팅한 알람 시간이 현재 시간보다 클 경우
         else if(alarmHour < calendar.get(Calendar.HOUR_OF_DAY)) {
             alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
+            intent.putExtra("alarmMode",1);
+            startActivity(intent);
         } // 세팅한 알람 시간이 현재 시간보다 작을 경우
         else if(alarmHour == calendar.get(Calendar.HOUR_OF_DAY)) {
-            if(alarmMinute > calendar.get(Calendar.MINUTE))
+            if(alarmMinute > calendar.get(Calendar.MINUTE)) {
                 alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
-            else
+                intent.putExtra("alarmMode",1);
+                startActivity(intent);
+            }
+            else {
                 alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
+                intent.putExtra("alarmMode",1);
+                startActivity(intent);
+            }
+
         }
+
     }
     public void cancelAlarm() {
         alarmManager.cancel(alarmPendingIntent);
