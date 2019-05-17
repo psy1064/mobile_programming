@@ -12,11 +12,13 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -30,7 +32,7 @@ import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     ImageView backgroundImage;
-    TextView alarmText, lightBulbText;
+    TextView alarmText, lightBulbText, tempText;
     Button alarmButton, turnOnButton, turnOffButton;
     CheckBox checkBox;
     NotificationManager notificationManager;
@@ -45,47 +47,76 @@ public class MainActivity extends AppCompatActivity {
 
     Context context;
 
-    // 블루투스 사용
-    private static int REQUEST_ENABLE_BT = 10;
-
-
     static boolean checkboxChecked = false;
     static int alarmHour ;
     static int alarmMinute ;
     static int timePickerMode = 0;
-    static int alarmMode = 0;
+    public static int alarmMode = 0;
+    private static boolean lightbulbSwitch = false;
 
-    @Override
-    public void onBackPressed() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("종료하시겠습니까?");
-        builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                ActivityCompat.finishAffinity(MainActivity.this);
-                System.runFinalizersOnExit(true);
-                System.exit(0);
-            }
-        });
-        builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Intent intent = new Intent(Intent.ACTION_MAIN);
-                intent.addCategory(Intent.CATEGORY_HOME);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-            }
-        });
-        builder.setNeutralButton("cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+    private static final String TAG = "TEST+MAactivity";
+    // 블루투스 사용
+    public static final int MODE_REQUEST = 1 ;
+    public static final int MESSAGE_WRITE = 2;
+    private static final int STATE_SENDING = 1;
+    private static final int STATE_NO_SENDING = 2;
+    private int mSendingState ;
+    private StringBuffer stringBuffer;
+    private static boolean lightMode = false;
+    private BluetoothService bluetoothServiceMain = null;
+
+    private final Handler handler = new Handler() {
+        public void handleMessage(Message message) {
+            super.handleMessage(message);
+            Log.d(TAG,"handle");
+            switch (message.what) {
+                case MESSAGE_WRITE : {
+                    switch (message.arg1) {
+                        case 1 : {
+                            Log.d(TAG,"handle");
+                            tempText = findViewById(R.id.tempText);
+                            tempText.setText(message.obj.toString());
+                            break;
+                        }
+                    }
+                    break;
+                }
 
             }
-        });
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        }
+    };
+
+    private synchronized void sendMessage( String message, int mode ) {
+
+        if ( mSendingState == STATE_SENDING ) {
+            try {
+                wait() ;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        mSendingState = STATE_SENDING ;
+
+        // Check that we're actually connected before trying anything
+        if ( bluetoothServiceMain.getState() != BluetoothService.STATE_CONNECTED ) {
+            mSendingState = STATE_NO_SENDING ;
+            return ;
+        }
+
+        // Check that there's actually something to send
+        if ( message.length() > 0 ) {
+            // Get the message bytes and tell the BluetoothChatService to write
+            byte[] send = message.getBytes() ;
+            bluetoothServiceMain.write(send, mode) ;
+
+            // Reset out string buffer to zero and clear the edit text field
+            stringBuffer.setLength(0) ;
+
+        }
+        mSendingState = STATE_NO_SENDING ;
+        notify() ;
     }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,7 +125,11 @@ public class MainActivity extends AppCompatActivity {
         changedBackground(); // 시간에 따라 배경 사진 변경
         init(); // findViewById 초기화
         //registerForContextMenu(fab);
-
+        if(bluetoothServiceMain == null) {
+            bluetoothServiceMain = initialActivity.btService;
+            bluetoothServiceMain.setHandler(handler);
+            stringBuffer = new StringBuffer("");
+        } // initialActivity의 블루투스 서비스를 가져오고 Handler 만 세팅
         if (checkboxChecked == true) {
             checkBox.setChecked(true);
             alarmButton.setVisibility(View.VISIBLE);
@@ -172,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // 알람 시간 설정 버튼
+
         turnOnButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -181,6 +217,14 @@ public class MainActivity extends AppCompatActivity {
                 alert.setPositiveButton("yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        if(bluetoothServiceMain.getState()==BluetoothService.STATE_CONNECTED) {
+                            Log.d(TAG,"send success");
+                            sendMessage("1", MODE_REQUEST);
+                            lightMode = true;
+                        }
+                        else {
+                            Log.e(TAG, "블루투스 연결 오류");
+                        }
                         Toast.makeText(getApplicationContext(),"Turn On", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -195,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // 전등 On 버튼
+
         turnOffButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -205,6 +250,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(getApplicationContext(),"Turn Off", Toast.LENGTH_LONG).show();
+                        Log.d(TAG,"send success");
+                        sendMessage("0", MODE_REQUEST);
+                        lightMode = false;
                     }
                 });
                 alert.setNegativeButton("no", new DialogInterface.OnClickListener() {
@@ -222,7 +270,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String item [] = {"TimePickerMode 세팅", "AlarmMode 세팅"};
                 final String item1 [] = {"Circle Mode", "Spinner Mode"};
-                final String item2 [] = {"기본"};
+
+                final String item2 [] = {"기본","실로폰"};
+
                 int[] selected = {0};
                 final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
                 alertBuilder.setTitle("설정");
@@ -264,6 +314,11 @@ public class MainActivity extends AppCompatActivity {
                                             case 0: {
                                                 Toast.makeText(getApplicationContext(), "기본 Mode", Toast.LENGTH_LONG).show();
                                                 alarmMode = 0;
+                                                break;
+                                            }
+                                            case 1: {
+                                                Toast.makeText(getApplicationContext(), "실로폰 Mode", Toast.LENGTH_LONG).show();
+                                                alarmMode = 1;
                                                 break;
                                             }
                                         }
@@ -354,24 +409,20 @@ public class MainActivity extends AppCompatActivity {
         alarmPendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         if(alarmHour > calendar.get(Calendar.HOUR_OF_DAY)) {
             alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
-            intent.putExtra("alarmMode",1);
-            startActivity(intent);
+
         } // 세팅한 알람 시간이 현재 시간보다 클 경우
         else if(alarmHour < calendar.get(Calendar.HOUR_OF_DAY)) {
             alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
-            intent.putExtra("alarmMode",1);
-            startActivity(intent);
+
         } // 세팅한 알람 시간이 현재 시간보다 작을 경우
         else if(alarmHour == calendar.get(Calendar.HOUR_OF_DAY)) {
             if(alarmMinute > calendar.get(Calendar.MINUTE)) {
                 alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
-                intent.putExtra("alarmMode",1);
-                startActivity(intent);
+
             }
             else {
                 alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
-                intent.putExtra("alarmMode",1);
-                startActivity(intent);
+
             }
 
         }
@@ -379,5 +430,34 @@ public class MainActivity extends AppCompatActivity {
     }
     public void cancelAlarm() {
         alarmManager.cancel(alarmPendingIntent);
+    }
+
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("종료하시겠습니까?");
+        builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+        builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_HOME);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+        });
+        builder.setNeutralButton("cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 }

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -53,6 +54,8 @@ public class AlarmActivity extends AppCompatActivity {
             hourText.setText("오전 0시");
             minuteText.setText(calendar.get(Calendar.MINUTE) + "분");
         }
+        alarmMode = MainActivity.alarmMode;
+        Log.d("alarmMode","alarmMode" + alarmMode);
 
         switch (alarmMode) {
             case 0: {
