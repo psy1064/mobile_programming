@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int STATE_NO_SENDING = 2;
     private int mSendingState ;
     private StringBuffer stringBuffer;
-    private static boolean lightMode = false;
     private BluetoothService bluetoothServiceMain = null;
 
     private final Handler handler = new Handler() {
@@ -76,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG,"handle");
                             tempText = findViewById(R.id.tempText);
                             tempText.setText(message.obj.toString());
+                            tempText.setTextSize(30);
                             break;
                         }
                     }
@@ -117,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
         mSendingState = STATE_NO_SENDING ;
         notify() ;
     }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,17 +126,19 @@ public class MainActivity extends AppCompatActivity {
 
         changedBackground(); // 시간에 따라 배경 사진 변경
         init(); // findViewById 초기화
-        //registerForContextMenu(fab);
+
         if(bluetoothServiceMain == null) {
             bluetoothServiceMain = initialActivity.btService;
             bluetoothServiceMain.setHandler(handler);
             stringBuffer = new StringBuffer("");
         } // initialActivity의 블루투스 서비스를 가져오고 Handler 만 세팅
+
         if (checkboxChecked == true) {
             checkBox.setChecked(true);
             alarmButton.setVisibility(View.VISIBLE);
             setAlarmButtonText();
         } // 체크박스가 체크된 상태였는지 확인
+
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -153,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // 알람 설정 CheckBox
+
         alarmButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
@@ -219,8 +224,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         if(bluetoothServiceMain.getState()==BluetoothService.STATE_CONNECTED) {
                             Log.d(TAG,"send success");
-                            sendMessage("1", MODE_REQUEST);
-                            lightMode = true;
+                            sendMessage("1", MODE_REQUEST); // ATmega에 전등 키라는 명령 전송
                         }
                         else {
                             Log.e(TAG, "블루투스 연결 오류");
@@ -251,8 +255,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(getApplicationContext(),"Turn Off", Toast.LENGTH_LONG).show();
                         Log.d(TAG,"send success");
-                        sendMessage("0", MODE_REQUEST);
-                        lightMode = false;
+                        sendMessage("0", MODE_REQUEST); // ATmega에 전등 끄라는 명령 전송
                     }
                 });
                 alert.setNegativeButton("no", new DialogInterface.OnClickListener() {
@@ -409,22 +412,17 @@ public class MainActivity extends AppCompatActivity {
         alarmPendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         if(alarmHour > calendar.get(Calendar.HOUR_OF_DAY)) {
             alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
-
         } // 세팅한 알람 시간이 현재 시간보다 클 경우
         else if(alarmHour < calendar.get(Calendar.HOUR_OF_DAY)) {
             alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
-
         } // 세팅한 알람 시간이 현재 시간보다 작을 경우
         else if(alarmHour == calendar.get(Calendar.HOUR_OF_DAY)) {
             if(alarmMinute > calendar.get(Calendar.MINUTE)) {
                 alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
-
             }
             else {
                 alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
-
             }
-
         }
 
     }

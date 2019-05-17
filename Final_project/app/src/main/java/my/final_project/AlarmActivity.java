@@ -1,7 +1,6 @@
 package my.final_project;
 
 import android.app.NotificationManager;
-import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -28,9 +27,7 @@ public class AlarmActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alarm);
-        Intent intent = getIntent();
 
-        alarmMode = intent.getIntExtra("alarmMode",0);
         hourText = (TextView)findViewById(R.id.hourText);
         minuteText = (TextView)findViewById(R.id.minuteText);
         stopButton = (Button)findViewById(R.id.stopButton);
