@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int MESSAGE_WRITE = 2;
     private static final int STATE_SENDING = 1;
     private static final int STATE_NO_SENDING = 2;
+
     private int mSendingState ;
     private StringBuffer stringBuffer;
     private BluetoothService bluetoothServiceMain = null;
@@ -173,10 +174,8 @@ public class MainActivity extends AppCompatActivity {
                                 alarmCalendar.set(Calendar.SECOND,00);
                                 alarmHour = hourOfDay;
                                 alarmMinute = minute;
-                                Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다.",Toast.LENGTH_LONG).show();
-
+                                Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다." ,Toast.LENGTH_LONG).show();
                                 setAlarmButtonText();
-
                                 showNotify();
                                 setAlarm();
                             }

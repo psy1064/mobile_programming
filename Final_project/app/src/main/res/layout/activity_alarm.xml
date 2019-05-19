@@ -34,7 +34,7 @@
     <ImageView
         android:id="@+id/alarmImage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="637dp"
         app:srcCompat="@drawable/alarm" />
 
     <Button
