@@ -11,6 +11,8 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import java.util.Calendar;
 
 public class AlarmActivity extends AppCompatActivity {
@@ -61,13 +63,17 @@ public class AlarmActivity extends AppCompatActivity {
                 break;
             }
             case 1: {
-                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.ringtone);
-                alarmImage.setImageResource(R.drawable.applogo);
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.bell);
+                Glide.with(getApplicationContext())
+                        .load(R.drawable.electronic)
+                        .fitCenter()
+                        .into(alarmImage);
+                // gif
                 break;
             }
 
         }
-
+        mediaPlayer.setLooping(true);
         mediaPlayer.start();
 
         stopButton.setOnClickListener(new View.OnClickListener() {

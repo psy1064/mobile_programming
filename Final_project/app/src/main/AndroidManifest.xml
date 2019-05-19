@@ -12,20 +12,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".AlarmActivity"></activity>
         <activity android:name=".initialActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity">
-
-        </activity>
-
-            /act>
-        <activity android:name=".DeviceListActivity"
+        <activity android:name=".MainActivity"/>
+        <activity android:name=".AlarmActivity"></activity>
+        <activity
+            android:name=".DeviceListActivity"
             android:theme="@android:style/Theme.DeviceDefault.Dialog" />
     </application>
 

@@ -274,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
                 String item [] = {"TimePickerMode 세팅", "AlarmMode 세팅"};
                 final String item1 [] = {"Circle Mode", "Spinner Mode"};
 
-                final String item2 [] = {"기본","실로폰"};
+                final String item2 [] = {"기본","전기고문"};
 
                 int[] selected = {0};
                 final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
@@ -320,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
                                                 break;
                                             }
                                             case 1: {
-                                                Toast.makeText(getApplicationContext(), "실로폰 Mode", Toast.LENGTH_LONG).show();
+                                                Toast.makeText(getApplicationContext(), "전기고문 Mode", Toast.LENGTH_LONG).show();
                                                 alarmMode = 1;
                                                 break;
                                             }
