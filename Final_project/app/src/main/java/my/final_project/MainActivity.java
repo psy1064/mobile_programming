@@ -32,7 +32,7 @@ import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     ImageView backgroundImage;
-    TextView alarmText, lightBulbText, tempText;
+    TextView alarmText, lightBulbText, tempText, humText;
     Button alarmButton, turnOnButton, turnOffButton;
     CheckBox checkBox;
     NotificationManager notificationManager;
@@ -74,9 +74,14 @@ public class MainActivity extends AppCompatActivity {
                     switch (message.arg1) {
                         case 1 : {
                             Log.d(TAG,"handle");
+                            String tmp = message.obj.toString();
+                            String[] dht = tmp.split(",");
                             tempText = findViewById(R.id.tempText);
-                            tempText.setText(message.obj.toString());
+                            humText = findViewById(R.id.humText);
+                            tempText.setText(dht[0] + " C");
                             tempText.setTextSize(30);
+                            humText.setText(dht[1] + " %");
+                            humText.setTextSize(30);
                             break;
                         }
                     }

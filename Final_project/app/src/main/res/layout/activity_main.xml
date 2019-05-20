@@ -35,33 +35,33 @@
         android:textSize="20sp" />
 
     <TextView
-        android:id="@+id/humText"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="186dp"
-        android:layout_marginRight="42dp"
-        android:background="@drawable/oval_shape"
-        android:gravity="center"
-        android:text="30%"
-        android:textSize="20sp" />
-
-    <TextView
         android:id="@+id/tempText"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="42dp"
-        android:layout_marginLeft="42dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginLeft="30dp"
         android:layout_marginTop="185dp"
         android:background="@drawable/oval_shape"
         android:gravity="center"
-        android:text="--"
-        android:textSize="20sp" />
+        android:text="26.0 C"
+        android:textSize="30sp" />
 
+
+    <TextView
+        android:id="@+id/humText"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="185dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/oval_shape"
+        android:gravity="center"
+        android:text="30.5 %"
+        android:textSize="30sp" />
 
     <ImageView
         android:id="@+id/dustLogo"
@@ -81,8 +81,8 @@
         android:layout_height="60dp"
         android:layout_alignBottom="@+id/humText"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="111dp"
-        android:layout_marginBottom="7dp"
+        android:layout_marginRight="103dp"
+        android:layout_marginBottom="5dp"
         app:srcCompat="@drawable/hum" />
 
     <ImageView
@@ -92,8 +92,8 @@
         android:layout_alignBottom="@+id/tempText"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
-        android:layout_marginStart="111dp"
-        android:layout_marginLeft="111dp"
+        android:layout_marginStart="93dp"
+        android:layout_marginLeft="93dp"
         android:layout_marginBottom="7dp"
         app:srcCompat="@drawable/temperature" />
 

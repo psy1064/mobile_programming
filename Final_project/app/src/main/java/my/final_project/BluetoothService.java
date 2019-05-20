@@ -300,7 +300,7 @@ public class BluetoothService {
             byte[] buffer = new byte[1024];
             int bytes;
             int bytes_tmp = 0;
-            int temp_Length = 5;
+            int temp_Length = 9;
             String temp = "";
             // Keep listening to the InputStream while connected
             while (true) {
@@ -317,7 +317,7 @@ public class BluetoothService {
                     }
 
                     if(bytes_tmp == temp_Length) {
-                        Log.d(TAG,temp);
+                        Log.d(TAG,"receive success");
                         bytes_tmp = 0;
                         mHandler.obtainMessage(MainActivity.MESSAGE_WRITE,1,1,temp).sendToTarget();
                         temp = "";
