@@ -37,4 +37,10 @@ public class DBManager extends SQLiteOpenHelper {
 
         return cursor;
     }
+    public Cursor selectData(String name) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM customers WHERE name = '"+name+"' ",null);
+
+        return cursor;
+    }
 }

@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -36,9 +37,18 @@ public class CustomerListActivity extends AppCompatActivity {
             layout_list.setOrientation(LinearLayout.VERTICAL);
             layout_list.setPadding(20,10,20,10);
 
-            TextView tvList = new TextView(this);
+            final TextView tvList = new TextView(this);
             tvList.setText(name);
             tvList.setTextSize(20);
+            tvList.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(CustomerListActivity.this, CustomerDetailActivity.class);
+                    intent.putExtra("name", tvList.getText().toString());
+                    startActivity(intent);
+                    finish();
+                }
+            });
             layout_list.addView(tvList);
 
             TextView tvList1 = new TextView(this);
