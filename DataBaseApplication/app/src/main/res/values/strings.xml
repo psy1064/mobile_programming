@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">고객관리</string>
+    <string name="hello_world">Hello world!</string>
+
+    <string name="action_settings1">홈</string>
+    <string name="action_settings2">고객등록</string>
+    <string name="action_settings3">고객현황</string>
+
+    <string name="name">성명</string>
+    <string name="gender">성별</string>
+    <string name="msg">수신여부</string>
+
+</resources>
