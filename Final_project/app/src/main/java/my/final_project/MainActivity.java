@@ -9,7 +9,9 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,35 +37,35 @@ public class MainActivity extends AppCompatActivity {
     TextView alarmText, lightBulbText, tempText, humText;
     Button alarmButton, turnOnButton, turnOffButton;
     CheckBox checkBox;
-    NotificationManager notificationManager;
-    AlarmManager alarmManager;
-
-    Calendar calendar = Calendar.getInstance();
-    Calendar alarmCalendar = Calendar.getInstance();
-
     FloatingActionButton fab;
+    // View 객체
+
+    NotificationManager alarm_notificationManager;      // 알람 푸쉬
+    AlarmManager alarmManager;                          // 알람 매니저
+    NotificationManager notificationManager;
+    NotificationCompat.Builder builder;                 // 계속 사용되는 푸쉬
+
+    Calendar calendar = Calendar.getInstance();         // 현재 시간을 확인하기 위한 캘린더 객체
+    Calendar alarmCalendar = Calendar.getInstance();    // 알람 시간을 저장해주기 위한 캘린더 객체
 
     PendingIntent alarmPendingIntent;
 
-    Context context;
+    boolean checkboxChecked = false;                    // 체크 박스의 상태를 저장하는 변수
+    int alarmHour ;                                     // 알람 시간(Hour : 24시간 단위)을 저장하는 변수
+    int alarmMinute ;                                   // 일람 시간(Minute)을 저장하는 변수
+    int timePickerMode = 0;                             // 타임 피커의 모드를 나타내는 변수
+    public static int alarmMode = 0;                           // 알람 모드를 나타내주는 변수
 
-    static boolean checkboxChecked = false;
-    static int alarmHour ;
-    static int alarmMinute ;
-    static int timePickerMode = 0;
-    public static int alarmMode = 0;
-    private static boolean lightbulbSwitch = false;
+    private final String TAG = "TEST+Main_activity";    // 디버깅을 위한 Log 태그
 
-    private static final String TAG = "TEST+MAactivity";
-    // 블루투스 사용
     public static final int MODE_REQUEST = 1 ;
     public static final int MESSAGE_WRITE = 2;
     private static final int STATE_SENDING = 1;
     private static final int STATE_NO_SENDING = 2;
 
     private int mSendingState ;
-    private StringBuffer stringBuffer;
     private BluetoothService bluetoothServiceMain = null;
+    // 블루투스 사용
 
     private final Handler handler = new Handler() {
         public void handleMessage(Message message) {
@@ -82,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
                             tempText.setTextSize(30);
                             humText.setText(dht[1] + " %");
                             humText.setTextSize(30);
+                            builder.setContentText("온도 = " + tempText.getText().toString() + " 습도 = " + humText.getText().toString() );
+                            notificationManager.notify(0,builder.build());
                             break;
                         }
                     }
@@ -91,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    // 메세지를 받는 핸들러
 
     private synchronized void sendMessage( String message, int mode ) {
 
@@ -117,33 +122,48 @@ public class MainActivity extends AppCompatActivity {
             bluetoothServiceMain.write(send, mode) ;
 
             // Reset out string buffer to zero and clear the edit text field
-            stringBuffer.setLength(0) ;
-
         }
         mSendingState = STATE_NO_SENDING ;
-        notify() ;
+        notify();
     }
-
+    // 블루투스 통신을 이용해 메세지를 보내는 함수
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        changedBackground(); // 시간에 따라 배경 사진 변경
-        init(); // findViewById 초기화
-
-        if(bluetoothServiceMain == null) {
+        /*if(bluetoothServiceMain == null) {
             bluetoothServiceMain = initialActivity.btService;
             bluetoothServiceMain.setHandler(handler);
-            stringBuffer = new StringBuffer("");
-        } // initialActivity의 블루투스 서비스를 가져오고 Handler 만 세팅
+        }
+        // initialActivity의 블루투스 서비스를 가져오고 Handler 만 세팅
+*/
+        // changedBackground();    // 시간에 따라 배경 사진 변경
+        init();                 // findViewById 초기화
+        showNotify();           // 실내의 온습도, 미세먼지 상황을 Notify
+        SharedPreferences sf = getSharedPreferences("checked",MODE_PRIVATE);
+        checkboxChecked = sf.getBoolean("checked", false);
+        sf = getSharedPreferences("alarmMode", MODE_PRIVATE);
+        alarmMode = sf.getInt("alarmMode", 0);
+        sf = getSharedPreferences("timepickerMode",MODE_PRIVATE);
+        timePickerMode = sf.getInt("timepickerMode",0);
+        sf = getSharedPreferences("alarmHour", MODE_PRIVATE);
+        alarmHour = sf.getInt("alarmHour", 0);
+        sf = getSharedPreferences("alarmMinute", MODE_PRIVATE);
+        alarmMinute = sf.getInt("alarmMinute", 0);
 
         if (checkboxChecked == true) {
             checkBox.setChecked(true);
             alarmButton.setVisibility(View.VISIBLE);
             setAlarmButtonText();
-        } // 체크박스가 체크된 상태였는지 확인
+            showAlarmNotify();
+
+        } else if(checkboxChecked == false){
+            checkBox.setChecked(false);
+            alarmButton.setVisibility(View.INVISIBLE);
+            alarmButton.setText("알람 시간 설정");
+        }
+        // 체크박스가 체크된 상태였는지 확인
 
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -151,14 +171,23 @@ public class MainActivity extends AppCompatActivity {
                 if(checkBox.isChecked()) {
                     alarmButton.setVisibility(View.VISIBLE);
                     checkboxChecked = true;
+                    SharedPreferences sf = getSharedPreferences("checked", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sf.edit();
+                    editor.putBoolean("checked", true);
+                    editor.commit();
                 }
                 else {
                     Toast.makeText(getApplicationContext(),"알람 설정이 초기화 되었습니다.", Toast.LENGTH_LONG).show();
                     alarmButton.setVisibility(View.INVISIBLE);
-                    alarmButton.setText("알람시간설정");
+                    alarmButton.setText("알람 시간 설정");
                     checkboxChecked = false;
-                    ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(0);
-                    cancelAlarm();
+                    SharedPreferences sf = getSharedPreferences("checked", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sf.edit();
+                    editor.putBoolean("checked", false);
+                    editor.commit();
+                    ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(1);
+                    if(alarmManager != null)
+                        cancelAlarm();
                 }
             }
         });
@@ -176,13 +205,19 @@ public class MainActivity extends AppCompatActivity {
                                 alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
                                 alarmCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                                 alarmCalendar.set(Calendar.MINUTE, minute);
-                                alarmCalendar.set(Calendar.SECOND,00);
+                                alarmCalendar.set(Calendar.SECOND,0);
                                 alarmHour = hourOfDay;
                                 alarmMinute = minute;
                                 Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다." ,Toast.LENGTH_LONG).show();
                                 setAlarmButtonText();
-                                showNotify();
+                                showAlarmNotify();
                                 setAlarm();
+                                SharedPreferences sf = getSharedPreferences("alarmHour", MODE_PRIVATE);
+                                SharedPreferences.Editor editor = sf.edit();
+                                editor.putInt("alarmHour", alarmHour);
+                                sf = getSharedPreferences("alarmMinute", MODE_PRIVATE);
+                                editor.putInt("alarmMinute", alarmMinute);
+                                editor.commit();
                             }
                         },alarmHour,alarmMinute,false);
                         timePickerDialog.show();
@@ -196,15 +231,21 @@ public class MainActivity extends AppCompatActivity {
                                 alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
                                 alarmCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                                 alarmCalendar.set(Calendar.MINUTE, minute);
-                                alarmCalendar.set(Calendar.SECOND,00);
+                                alarmCalendar.set(Calendar.SECOND,0);
                                 alarmHour = hourOfDay;
                                 alarmMinute = minute;
                                 Toast.makeText(getApplicationContext(), "알람 시간 = " + alarmHour + "시 " + alarmMinute + "분입니다.",Toast.LENGTH_LONG).show();
-
                                 setAlarmButtonText();
-
-                                showNotify();
+                                showAlarmNotify();
                                 setAlarm();
+                                SharedPreferences sf = getSharedPreferences("alarmHour", MODE_PRIVATE);
+                                SharedPreferences.Editor editor = sf.edit();
+                                editor.putInt("alarmHour", alarmHour);
+                                SharedPreferences sf1 = getSharedPreferences("alarmMinute", MODE_PRIVATE);
+                                SharedPreferences.Editor editor1 = sf1.edit();
+                                editor1.putInt("alarmMinute", alarmMinute);
+                                editor.commit();
+                                editor1.commit();
                             }
                         },alarmHour,alarmMinute,false);
                         timePickerDialog.show();
@@ -277,9 +318,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String item [] = {"TimePickerMode 세팅", "AlarmMode 세팅"};
                 final String item1 [] = {"Circle Mode", "Spinner Mode"};
-
                 final String item2 [] = {"기본","전기고문"};
-
                 int[] selected = {0};
                 final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
                 alertBuilder.setTitle("설정");
@@ -297,11 +336,19 @@ public class MainActivity extends AppCompatActivity {
                                             case 0: {
                                                 Toast.makeText(getApplicationContext(), "Circle Mode", Toast.LENGTH_LONG).show();
                                                 timePickerMode = 0;
+                                                SharedPreferences sf = getSharedPreferences("timepickerMode", MODE_PRIVATE);
+                                                SharedPreferences.Editor editor = sf.edit();
+                                                editor.putInt("timepickerMode", 0);
+                                                editor.commit();
                                                 break;
                                             }
                                             case 1: {
                                                 Toast.makeText(getApplicationContext(), "Spinner Mode", Toast.LENGTH_LONG).show();
                                                 timePickerMode = 1;
+                                                SharedPreferences sf = getSharedPreferences("timepickerMode", MODE_PRIVATE);
+                                                SharedPreferences.Editor editor = sf.edit();
+                                                editor.putInt("timepickerMode", 1);
+                                                editor.commit();
                                                 break;
                                             }
                                         }
@@ -321,11 +368,19 @@ public class MainActivity extends AppCompatActivity {
                                             case 0: {
                                                 Toast.makeText(getApplicationContext(), "기본 Mode", Toast.LENGTH_LONG).show();
                                                 alarmMode = 0;
+                                                SharedPreferences sf = getSharedPreferences("alarmMode", MODE_PRIVATE);
+                                                SharedPreferences.Editor editor = sf.edit();
+                                                editor.putInt("alarmMode", 0);
+                                                editor.commit();
                                                 break;
                                             }
                                             case 1: {
                                                 Toast.makeText(getApplicationContext(), "전기고문 Mode", Toast.LENGTH_LONG).show();
                                                 alarmMode = 1;
+                                                SharedPreferences sf = getSharedPreferences("alarmMode", MODE_PRIVATE);
+                                                SharedPreferences.Editor editor = sf.edit();
+                                                editor.putInt("alarmMode", 1);
+                                                editor.commit();
                                                 break;
                                             }
                                         }
@@ -351,14 +406,15 @@ public class MainActivity extends AppCompatActivity {
         turnOnButton = (Button)findViewById(R.id.turnOnButton);
         turnOffButton = (Button)findViewById(R.id.turnOffButton);
         fab = (FloatingActionButton)findViewById(R.id.fab);
+        backgroundImage = (ImageView) findViewById(R.id.background);
+        alarmText = (TextView) findViewById(R.id.alarmText);
+        lightBulbText = (TextView) findViewById(R.id.lightBulbText);
     }
     // findViewById 초기화
     public void changedBackground() {
         int hour;
         hour = calendar.get(Calendar.HOUR_OF_DAY);
-        backgroundImage = (ImageView) findViewById(R.id.background);
-        alarmText = (TextView) findViewById(R.id.alarmText);
-        lightBulbText = (TextView) findViewById(R.id.lightBulbText);
+
         if(hour>6 && hour<18)
         {
             backgroundImage.setImageResource(R.drawable.back_sky);
@@ -373,30 +429,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     // 시간에 따라 배경 사진 변경
-    public void showNotify() {
-        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,0, new Intent(getApplicationContext(), MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
-        NotificationCompat.Builder nbuilder = new NotificationCompat.Builder(this,"default");
-        nbuilder.setSmallIcon(R.drawable.alarm);
-        nbuilder.setContentTitle("알람");
-        //nbuilder.setAutoCancel(true);
-        if(alarmHour > 0 && alarmHour < 12)
-            nbuilder.setContentText("설정된 알람 시간은 오전 " + alarmHour + "시 " + alarmMinute + "분");
-        else if(alarmHour == 12)
-            nbuilder.setContentText("설정된 알람 시간은 오후 " + alarmHour + "시 " + alarmMinute + "분");
-        else if(alarmHour > 12 && alarmHour <24)
-            nbuilder.setContentText("설정된 알람 시간은 오후 " + (alarmHour-12) + "시 " + alarmMinute + "분");
-        else if(alarmHour == 0)
-            nbuilder.setContentText("설정된 알람 시간은 오전 " + "0시 " + alarmMinute + "분");
-        nbuilder.setContentIntent(pendingIntent);
-        notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.createNotificationChannel(
-                    new NotificationChannel("default", "기본채널",NotificationManager.IMPORTANCE_DEFAULT));
-        }
-        notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(0,nbuilder.build());
-    }
-    // Notification 활성화
+
     public void setAlarmButtonText() {
         if(alarmHour > 0 && alarmHour < 12)
             alarmButton.setText("오전 " + alarmHour + "시 " + alarmMinute + "분");
@@ -408,12 +441,13 @@ public class MainActivity extends AppCompatActivity {
             alarmButton.setText("오전 " + "0시 " + alarmMinute + "분");
     }
     // 알람 설정 버튼의 텍스트 설정
+
     public void setAlarm() {
         int interval = 1000 * 60 * 60 * 24 ;
         // 설정된 알람 시간이 현재 시간보다 작을 경우 다음날 알람으로 적용해줘야 하는데 필요한 변수
-        alarmManager = (AlarmManager) getSystemService(context.ALARM_SERVICE);
+        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlarmActivity.class);
-        alarmPendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        alarmPendingIntent = PendingIntent.getActivity(getApplicationContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         if(alarmHour > calendar.get(Calendar.HOUR_OF_DAY)) {
             alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis(),alarmPendingIntent);
         } // 세팅한 알람 시간이 현재 시간보다 클 경우
@@ -428,11 +462,14 @@ public class MainActivity extends AppCompatActivity {
                 alarmManager.set(AlarmManager.RTC_WAKEUP,alarmCalendar.getTimeInMillis()+interval,alarmPendingIntent);
             }
         }
-
     }
+    // 알람 설정
+
     public void cancelAlarm() {
         alarmManager.cancel(alarmPendingIntent);
+        alarmManager = null;
     }
+    // 설정된 알람 취소
 
     @Override
     public void onBackPressed() {
@@ -441,19 +478,13 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                finish();
-            }
-        });
-        builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(Intent.ACTION_MAIN);
                 intent.addCategory(Intent.CATEGORY_HOME);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
             }
         });
-        builder.setNeutralButton("cancel", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -461,5 +492,52 @@ public class MainActivity extends AppCompatActivity {
         });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+    // 뒤로가기 키를 눌렀을 때 알림창 생성
+
+    public void showAlarmNotify() {
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,0, new Intent(getApplicationContext(), MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Builder nbuilder = new NotificationCompat.Builder(this,"default");
+        nbuilder.setSmallIcon(R.drawable.alarm);
+        nbuilder.setContentTitle("알람");
+        //nbuilder.setAutoCancel(true);
+        if(alarmHour > 0 && alarmHour < 12)
+            nbuilder.setContentText("설정된 알람 시간은 오전 " + alarmHour + "시 " + alarmMinute + "분");
+        else if(alarmHour == 12)
+            nbuilder.setContentText("설정된 알람 시간은 오후 " + alarmHour + "시 " + alarmMinute + "분");
+        else if(alarmHour > 12 && alarmHour <24)
+            nbuilder.setContentText("설정된 알람 시간은 오후 " + (alarmHour-12) + "시 " + alarmMinute + "분");
+        else if(alarmHour == 0)
+            nbuilder.setContentText("설정된 알람 시간은 오전 " + "0시 " + alarmMinute + "분");
+        nbuilder.setContentIntent(pendingIntent);
+        alarm_notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            alarm_notificationManager.createNotificationChannel(
+                    new NotificationChannel("default", "기본채널",NotificationManager.IMPORTANCE_DEFAULT));
+        }
+        alarm_notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+        alarm_notificationManager.notify(1,nbuilder.build());
+    }
+    // Alarm 설정 시 Notification 활성화
+
+    void showNotify() {
+        String CHANNEL_ID = "final_project";
+        Uri soundUri = Uri.parse("C:\\Users\\SYPark\\Documents\\Github\\mobile_programming\\Final_project\\app\\src\\main\\res\\raw\\zero.mp3");
+        builder  = new NotificationCompat.Builder(this,CHANNEL_ID);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,new Intent(getApplicationContext(), MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setSmallIcon(R.drawable.applogo);
+        builder.setContentTitle("Smart Home Application");
+        builder.setContentText("온도 = 00 C 습도 = 00%" );
+        builder.setContentIntent(pendingIntent);
+        builder.setSound(soundUri);
+        notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "final_project",NotificationManager.IMPORTANCE_DEFAULT);
+
+
+        }
+        notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(0,builder.build());
+        Log.d(TAG,"notify");
     }
 }

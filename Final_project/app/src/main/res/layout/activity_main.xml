@@ -190,8 +190,8 @@
         android:layout_marginTop="564dp"
         android:layout_toEndOf="@+id/lightBulbText"
         android:layout_toRightOf="@+id/lightBulbText"
-        android:visibility="invisible"
-        android:text="알람시간설정" />
+        android:text="알람 시간 설정"
+        android:visibility="invisible" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
