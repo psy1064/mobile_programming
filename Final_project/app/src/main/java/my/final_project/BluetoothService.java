@@ -46,7 +46,8 @@ public class BluetoothService {
         // BluetoothAdapter 얻기
         btAdapter = BluetoothAdapter.getDefaultAdapter();
     }
-    public void setHandler(Handler h) {
+    public void set(Activity ac, Handler h) {
+        mActivity = ac;
         mHandler = h;
     }
     // 디바이스가 블루투스가 가능한지 체크하는 메소드

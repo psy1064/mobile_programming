@@ -1,6 +1,5 @@
 package my.final_project;
 
-import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +9,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
@@ -25,11 +25,58 @@ public class AlarmActivity extends AppCompatActivity {
     ImageView alarmImage;
     int alarmMode = 0;
 
+    public static final int MODE_REQUEST = 1 ;
+    public static final int MESSAGE_WRITE = 2;
+    private static final int STATE_SENDING = 1;
+    private static final int STATE_NO_SENDING = 2;
+
+    private int mSendingState ;
+
     private static final String TAG = "TEST+Alarmactivity";
+
+    private synchronized void sendMessage( String message, int mode ) {
+
+        if ( mSendingState == STATE_SENDING ) {
+            try {
+                wait() ;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        mSendingState = STATE_SENDING ;
+
+        // Check that we're actually connected before trying anything
+        if ( MainActivity.bluetoothServiceMain.getState() != BluetoothService.STATE_CONNECTED ) {
+            mSendingState = STATE_NO_SENDING ;
+            return ;
+        }
+
+        // Check that there's actually something to send
+        if ( message.length() > 0 ) {
+            // Get the message bytes and tell the BluetoothChatService to write
+            byte[] send = message.getBytes() ;
+            MainActivity.bluetoothServiceMain.write(send, mode) ;
+
+            // Reset out string buffer to zero and clear the edit text field
+        }
+        mSendingState = STATE_NO_SENDING ;
+        notify();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alarm);
+
+        if(MainActivity.bluetoothServiceMain.getState()==BluetoothService.STATE_CONNECTED) {
+            Log.d(TAG,"send success");
+            sendMessage("turn on", MODE_REQUEST); // Atmega128에 전등 키라는 명령 전송
+            Toast.makeText(getApplicationContext(),"Turn On", Toast.LENGTH_LONG).show();
+        }
+        else {
+            Log.e(TAG, "블루투스 연결 오류");
+        }
+
 
         hourText = (TextView)findViewById(R.id.hourText);
         minuteText = (TextView)findViewById(R.id.minuteText);
@@ -84,8 +131,6 @@ public class AlarmActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mediaPlayer.stop();
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intent);
                 finish();
             }
         });

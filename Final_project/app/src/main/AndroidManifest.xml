@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -24,6 +25,11 @@
         <activity
             android:name=".DeviceListActivity"
             android:theme="@android:style/Theme.DeviceDefault.Dialog" />
+        <receiver android:name=".Alarm_Receiver" />
+        <service
+            android:name=".AlarmService"
+            android:enabled="true"></service>
+
     </application>
 
 </manifest>
