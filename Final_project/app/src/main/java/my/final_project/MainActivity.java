@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -85,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
                             tempText.setTextSize(30);
                             humText.setText(dht[1] + " %");
                             humText.setTextSize(30);
+                            //builder.setContentText("온도 = " + dht[0] + "C 습도 = " + dht[1] + "%" );
+                            //notificationManager.notify(0,builder.build());
                             break;
                         }
                     }
@@ -133,10 +136,15 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                finish();
                 Intent intent = new Intent(Intent.ACTION_MAIN);
                 intent.addCategory(Intent.CATEGORY_HOME);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
+                ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(1);       // 알람 Notification 취소
+                ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(0);       // 알람 Notification 취소
+                if(alarmManager != null)                                                                    // 알람이 설정 되어 있었다면
+                    alarm_Off();                                                                            // 알람 설정 해제
             }
         });
         builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
@@ -155,10 +163,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if(bluetoothServiceMain == null) {
-            bluetoothServiceMain = initialActivity.btService;
-            bluetoothServiceMain.set(this, handler);
-        }
+
+        bluetoothServiceMain = initialActivity.btService;
+        bluetoothServiceMain.set(this, handler);
         // initialActivity의 블루투스 서비스를 가져오고 Handler 만 세팅
 
         init();                 // findViewById 초기화
@@ -313,8 +320,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String item [] = {"TimePickerMode 세팅", "AlarmMode 세팅"};
                 final String item1 [] = {"Circle Mode", "Spinner Mode"};
-                final String item2 [] = {"기본","전기고문"};
-                int[] selected = {0};
+                final String item2 [] = {"기본","전기고문","김수미"};
                 final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
                 alertBuilder.setTitle("설정");
                 alertBuilder.setItems(item, new DialogInterface.OnClickListener() {
@@ -375,6 +381,15 @@ public class MainActivity extends AppCompatActivity {
                                                 SharedPreferences sf = getSharedPreferences("alarmMode", MODE_PRIVATE);
                                                 SharedPreferences.Editor editor = sf.edit();
                                                 editor.putInt("alarmMode", 1);
+                                                editor.commit();
+                                                break;
+                                            }
+                                            case 2: {
+                                                Toast.makeText(getApplicationContext(), "김수미 Mode", Toast.LENGTH_LONG).show();
+                                                alarmMode = 2;
+                                                SharedPreferences sf = getSharedPreferences("alarmMode", MODE_PRIVATE);
+                                                SharedPreferences.Editor editor = sf.edit();
+                                                editor.putInt("alarmMode", 2);
                                                 editor.commit();
                                                 break;
                                             }
@@ -462,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
         int interval = 1000 * 60 * 60 * 24 ;
         // 설정된 알람 시간이 현재 시간보다 작을 경우 다음날 알람으로 적용해줘야 하는데 필요한 변수
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, Alarm_Receiver.class);
+        Intent intent = new Intent(getApplicationContext(), Alarm_Receiver.class);
         alarmPendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         if(Build.VERSION.SDK_INT >= 23) {
             if (alarmHour > calendar.get(Calendar.HOUR_OF_DAY)) {
@@ -522,24 +537,27 @@ public class MainActivity extends AppCompatActivity {
     public void showAlarmNotify() {
         PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this,0, new Intent(getApplicationContext(), MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder nbuilder = new NotificationCompat.Builder(this,"default");
+        Uri sounduri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.zero);
+
         nbuilder.setSmallIcon(R.drawable.alarm);
         nbuilder.setContentTitle("알람");
-        //nbuilder.setAutoCancel(true);
-        if(alarmHour > 0 && alarmHour < 12)
-            nbuilder.setContentText("설정된 알람 시간은 오전 " + alarmHour + "시 " + alarmMinute + "분");
-        else if(alarmHour == 12)
-            nbuilder.setContentText("설정된 알람 시간은 오후 " + alarmHour + "시 " + alarmMinute + "분");
-        else if(alarmHour > 12 && alarmHour <24)
-            nbuilder.setContentText("설정된 알람 시간은 오후 " + (alarmHour-12) + "시 " + alarmMinute + "분");
-        else if(alarmHour == 0)
-            nbuilder.setContentText("설정된 알람 시간은 오전 " + "0시 " + alarmMinute + "분");
+        nbuilder.setOngoing(true);                  // 알람을 고정 시켜줌
         nbuilder.setContentIntent(pendingIntent);
-        alarm_notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if(alarmHour > 0 && alarmHour < 12)
+            nbuilder.setContentText("설정된 알람 시간은 오전 " + alarmHour + "시 " + alarmMinute + "분입니다.");
+        else if(alarmHour == 12)
+            nbuilder.setContentText("설정된 알람 시간은 오후 " + alarmHour + "시 " + alarmMinute + "분입니다.");
+        else if(alarmHour > 12 && alarmHour <24)
+            nbuilder.setContentText("설정된 알람 시간은 오후 " + (alarmHour-12) + "시 " + alarmMinute + "분입니다.");
+        else if(alarmHour == 0)
+            nbuilder.setContentText("설정된 알람 시간은 오전 " + "0시 " + alarmMinute + "분입니다.");
+
+        alarm_notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             alarm_notificationManager.createNotificationChannel(
                     new NotificationChannel("default", "기본채널",NotificationManager.IMPORTANCE_DEFAULT));
         }
-        alarm_notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         alarm_notificationManager.notify(1,nbuilder.build());
 
         Log.d(TAG,"show Alarm notify");
@@ -548,19 +566,31 @@ public class MainActivity extends AppCompatActivity {
 
     void showNotify() {
         String CHANNEL_ID = "final_project";
-        Uri soundUri = Uri.parse("C:\\Users\\SYPark\\Documents\\Github\\mobile_programming\\Final_project\\app\\src\\main\\res\\raw\\zero.mp3");
+        Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.bell);
+
         builder  = new NotificationCompat.Builder(this,CHANNEL_ID);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,new Intent(getApplicationContext(), MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+
         builder.setSmallIcon(R.drawable.applogo);
         builder.setContentTitle("Smart Home Application");
         builder.setContentText("온도 = 00 C 습도 = 00%" );
         builder.setContentIntent(pendingIntent);
         builder.setSound(soundUri);
+
         notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "final_project",NotificationManager.IMPORTANCE_DEFAULT);
+            if(soundUri != null) {
+                AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .build();
+
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "final_project", NotificationManager.IMPORTANCE_DEFAULT);
+                channel.setSound(soundUri, audioAttributes);
+                notificationManager.createNotificationChannel(channel);
+            }
         }
-        notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+
         notificationManager.notify(0,builder.build());
         Log.d(TAG,"notify");
     }

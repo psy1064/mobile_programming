@@ -18,7 +18,7 @@ public class AlarmService extends Service {
         super.onCreate();
         PushWakeLock.acquireCpuWakeLock(this);
         Log.d("TEST+", "HI");
-        Intent intent = new Intent(this, AlarmActivity.class);
+        Intent intent = new Intent(getApplicationContext(), AlarmActivity.class);
         startActivity(intent);
     }
 

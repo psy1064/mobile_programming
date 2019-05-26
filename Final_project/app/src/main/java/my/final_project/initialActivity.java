@@ -1,6 +1,7 @@
 package my.final_project;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,13 +23,10 @@ public class initialActivity extends AppCompatActivity {
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     public static final int MESSAGE_STATE_CHANGE = 1;
-    private static final boolean D = true;
-
-    public static final int MESSAGE_WRITE = 2;
-    public static final int MODE_REQUEST = 1 ;
-    // synchronized flags
 
     public static BluetoothService btService = null;
+
+    ProgressDialog progressDialog;
 
     private final Handler handler = new Handler() {
         public void handleMessage(Message message) {
@@ -36,7 +34,7 @@ public class initialActivity extends AppCompatActivity {
 
             switch (message.what) {
                 case MESSAGE_STATE_CHANGE :
-                    if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE" +message.arg1);
+                    Log.i(TAG, "MESSAGE_STATE_CHANGE" +message.arg1);
 
                     switch (message.arg1) {
                         case BluetoothService.STATE_CONNECTED :
@@ -75,7 +73,6 @@ public class initialActivity extends AppCompatActivity {
                 } else {
                     // finish();
                 }
-
             }
         });
 
@@ -84,12 +81,6 @@ public class initialActivity extends AppCompatActivity {
             public void onClick(View v) {
                 btService.scanDevice();
             }
-        });
-        test.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                }
         });
         test.setOnClickListener(new View.OnClickListener() {
             @Override
