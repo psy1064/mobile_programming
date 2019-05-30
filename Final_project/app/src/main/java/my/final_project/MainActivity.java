@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     Calendar alarmCalendar = Calendar.getInstance();    // 알람 시간을 저장해주기 위한 캘린더 객체
 
     PendingIntent alarmPendingIntent;
+    Intent alarmIntent;
 
     boolean checkboxChecked = false;                    // 체크 박스의 상태를 저장하는 변수
     int alarmHour ;                                     // 알람 시간(Hour : 24시간 단위)을 저장하는 변수
@@ -86,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
                             tempText.setTextSize(30);
                             humText.setText(dht[1] + " %");
                             humText.setTextSize(30);
-                            //builder.setContentText("온도 = " + dht[0] + "C 습도 = " + dht[1] + "%" );
-                            //notificationManager.notify(0,builder.build());
+                            // builder.setContentText("온도 = " + dht[0] + "C 습도 = " + dht[1] + "%" );
+                            // notificationManager.notify(0,builder.build());
                             break;
                         }
                     }
@@ -477,8 +478,8 @@ public class MainActivity extends AppCompatActivity {
         int interval = 1000 * 60 * 60 * 24 ;
         // 설정된 알람 시간이 현재 시간보다 작을 경우 다음날 알람으로 적용해줘야 하는데 필요한 변수
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(getApplicationContext(), Alarm_Receiver.class);
-        alarmPendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmIntent = new Intent(getApplicationContext(), Alarm_Receiver.class);
+        alarmPendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         if(Build.VERSION.SDK_INT >= 23) {
             if (alarmHour > calendar.get(Calendar.HOUR_OF_DAY)) {
                 alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmCalendar.getTimeInMillis(), alarmPendingIntent);

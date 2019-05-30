@@ -6,11 +6,11 @@ import android.content.Intent;
 import android.util.Log;
 
 public class Alarm_Receiver extends BroadcastReceiver {
+    String TAG = "TEST+AlarmReceiver";
     Context context;
-
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d("TEST+", "receiver");
+        Log.d(TAG, "receiver");
         this.context = context;
 
         Intent in = new Intent(context, AlarmService.class);
